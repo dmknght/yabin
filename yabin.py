@@ -108,7 +108,7 @@ def generateFuzzyHash(filename):
     patterns.sort()
     # Just print the first sorted pattern... a vey poor mans fuzzy hash
     for s in patterns:
-        print filename + ',' + s
+        print(filename + ',' + s)
         return
 
 
@@ -126,20 +126,20 @@ def generateYara(filename, singleFile, tight=True, max_lines=3000, min_patterns=
             # If we have no, or only one pattern, it probably won't be a tight
             # enough signature
             if len(byte_patterns) > min_patterns:
-                print 'rule tight_' + filename.replace('/', '_').replace('.', '') + ' {'
-                print ' strings:'
+                print('rule tight_' + filename.replace('/', '_').replace('.', '') + ' {')
+                print(' strings:')
 
                 count = 1
                 for s in byte_patterns:
                     if count < max_lines:
                         count = count + 1
-                        print '  $a_' + str(count) + ' = { ' + s + ' }'
+                        print('  $a_' + str(count) + ' = { ' + s + ' }')
 
-                print ' condition:'
+                print(' condition:')
                 tight_decimal = int(round(count * percent_tight_match))
-                print '  ' + str(tight_decimal) + ' of them'
-                print '}'
-                print '\r\n\r\n'
+                print('  ' + str(tight_decimal) + ' of them')
+                print('}')
+                print('\r\n\r\n')
 
     # if not tight:
     #     # Dont print the same rule twice
@@ -171,20 +171,20 @@ def generateYara(filename, singleFile, tight=True, max_lines=3000, min_patterns=
             # If we have no, or only one pattern, it probably won't be a tight
             # enough signature
             if len(byte_patterns) > min_patterns:
-                print 'rule tight_' + filename.replace('/', '_').replace('.', '') + ' {'
-                print ' strings:'
+                print('rule tight_' + filename.replace('/', '_').replace('.', '') + ' {')
+                print(' strings:')
 
                 count = 1
                 for s in byte_patterns:
                     if count < max_lines:
                         count = count + 1
-                        print '  $a_' + str(count) + ' = { ' + s + ' }'
+                        print('  $a_' + str(count) + ' = { ' + s + ' }')
 
-                print ' condition:'
+                print(' condition:')
                 tight_decimal = int(round(count * percent_tight_match))
-                print '  any of them'
-                print '}'
-                print '\r\n\r\n'        
+                print('  any of them')
+                print('}')
+                print('\r\n\r\n')
 
 
 def fuzzyHash(filename, tight=True):
@@ -224,8 +224,8 @@ def addToWhitelist(folder):
     if min_seen == 0:
         for f in os.listdir(folder):
             count = count + 1
-            print 'Processed ' + str(count) + ' file(s)'
-            print 'Processing ' + f
+            print('Processed ' + str(count) + ' file(s)')
+            print('Processing ' + f)
             new_seen = getBytePatterns('./' + folder + '/' + f, True)
             for pattern in new_seen:
                 db.execute(
@@ -238,7 +238,7 @@ def addToWhitelist(folder):
         # Built a count of how often every pattern was seen
         for f in os.listdir(folder):
             count = count + 1
-            print 'Processed ' + str(count) + ' file(s)'
+            print('Processed ' + str(count) + ' file(s)')
             new_seen = getBytePatterns('./' + folder + '/' + f, True)
             for pattern in new_seen:
                 if pattern not in seen:
@@ -277,7 +277,7 @@ def deleteDatabase():
 
 # Add a file or folder to malware db
 def addMalware(filename):
-    print 'Adding samples to malware database'
+    print('Adding samples to malware database')
     if os.path.isdir(filename):
         for f in os.listdir(filename):
             generateSample('./' + filename + '/' + f)
@@ -285,7 +285,7 @@ def addMalware(filename):
         if os.path.isfile(filename):
             generateSample(filename)
     conn.commit()
-    print 'Added samples'
+    print('Added samples')
 
 
 # For every pattern in file, find related
@@ -305,11 +305,11 @@ def malwareSearch(filename):
                 pattern_lookups[sample] = pattern
 
     if len(found_samples) > 0:
-        print 'Found related samples:'
+        print('Found related samples:')
         for sample in found_samples:
-            print sample + ' matched via ' + pattern_lookups[sample]
+            print(sample + ' matched via ' + pattern_lookups[sample])
     else:
-        print 'No related samples found'
+        print('No related samples found')
 
 def findRelated(pattern):
     db.execute('SELECT md5 FROM malware WHERE pattern ="' + pattern + '"')
