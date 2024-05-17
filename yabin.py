@@ -194,7 +194,7 @@ def gen_yara(filename, tight=True, max_lines=3000, min_patterns=0):
 def fuzzy_hash(filename, tight=True):
     if os.path.isdir(filename):
         for f in os.listdir(filename):
-            gen_fuzzy_hash('./' + filename + '/' + f)
+            gen_fuzzy_hash(filename + '/' + f)
     else:
         if os.path.isfile(filename):
             gen_fuzzy_hash(filename)
@@ -203,7 +203,7 @@ def fuzzy_hash(filename, tight=True):
 def yara(filename, tight=True):
     if os.path.isdir(filename):
         for f in os.listdir(filename):
-            gen_yara('./' + filename + '/' + f, False, tight)
+            gen_yara(filename + '/' + f, False, tight)
     else:
         if os.path.isfile(filename):
             gen_yara(filename, True, tight)
@@ -252,7 +252,7 @@ def add_to_whitelist(folder):
                     seen[pattern] = seen[pattern] + 1
 
         total = 0
-        # Insert every pattern seen > x times into the whtelist
+        # Insert every pattern seen > x times into the whitelist
         for pattern, count in seen.iteritems():
             if count > min_seen:
                 total = total + 1
@@ -285,7 +285,7 @@ def add_malware(filename):
     print('Adding samples to malware database')
     if os.path.isdir(filename):
         for f in os.listdir(filename):
-            gen_sample('./' + filename + '/' + f)
+            gen_sample(filename + '/' + f)
     else:
         if os.path.isfile(filename):
             gen_sample(filename)
@@ -320,11 +320,11 @@ def malware_search(filename):
 def find_related(pattern):
     db.execute('SELECT md5 FROM malware WHERE pattern ="' + pattern + '"')
     rows = db.fetchall()
-    toReturn = []
+    to_return = []
     for row in rows:
-        toReturn.append(row[0])
+        to_return.append(row[0])
 
-    return toReturn
+    return to_return
 
 
 # This regex decides what patterns we will extract
