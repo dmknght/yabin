@@ -1,4 +1,4 @@
-'''
+"""
 
  YaraBin (Yara + Binary)
 
@@ -6,7 +6,7 @@
 
  Questions of comments? Hit me up @chrisdoman
 
-'''
+"""
 
 import binascii
 import re
@@ -27,7 +27,7 @@ db = conn.cursor()
 db.execute('PRAGMA synchronous=OFF')
 
 
-def parseArguments():
+def parse_args():
     parser = argparse.ArgumentParser(
         description='Yabin - Signatures and searches malware')
     parser.add_argument('-y', '--yara', help='Generate yara rule for the file or folder', required=False)
@@ -48,25 +48,25 @@ def parseArguments():
     if args['yaraHunt']:
         yara(args['yaraHunt'], False)
     if args['deleteDatabase']:
-        deleteDatabase()
+        delete_database()
     if args['addToWhitelist']:
-        addToWhitelist(args['addToWhitelist'])
+        add_to_whitelist(args['addToWhitelist'])
     if args['fuzzyHash']:
-        fuzzyHash(args['fuzzyHash'])
+        fuzzy_hash(args['fuzzyHash'])
     if args['malwareAdd']:
-        addMalware(args['malwareAdd'])
+        add_malware(args['malwareAdd'])
     if args['malwareSearch']:
-        malwareSearch(args['malwareSearch'])
+        malware_search(args['malwareSearch'])
 
 
-def getBytePatterns(filename, ignore_whitelist=False):
+def get_byte_patterns(filename, ignore_whitelist=False):
     with open(filename, 'rb') as f:
         content = f.read()
-    hex = binascii.hexlify(content)
+    hex_value = binascii.hexlify(content)
     # Add - every two characters so we match -xx- not x-x
-    hex = 'x'.join([hex[i:i + 2] for i in range(0, len(hex), 2)])
+    hex_value = 'x'.join([hex_value[i:i + 2] for i in range(0, len(hex_value), 2)])
     seen = {}
-    for match in re.findall(prolog_regex, hex):
+    for match in re.findall(prolog_regex, hex_value):
         bit = match[0].replace('x', '')
         if bit not in seen:
             if ignore_whitelist or not whitelisted(bit):
@@ -78,7 +78,7 @@ def getBytePatterns(filename, ignore_whitelist=False):
     return seen
 
 
-def loadProlog():
+def load_prolog():
     prolog_regex = '('
     with open('regex.txt') as file:
         for l in file.readlines():
@@ -101,9 +101,9 @@ def entropy(string):
     return entropy
 
 
-def generateFuzzyHash(filename):
+def gen_fuzzy_hash(filename):
     # Print out those that aren't in the whitelist
-    byte_patterns = getBytePatterns(filename)
+    byte_patterns = get_byte_patterns(filename)
     patterns = []
     for s in byte_patterns:
         patterns.append(s)
@@ -115,12 +115,13 @@ def generateFuzzyHash(filename):
         return
 
 
-def generateYara(filename, singleFile, tight=True, max_lines=3000, min_patterns=0):
+# def gen_yara(filename, single_file, tight=True, max_lines=3000, min_patterns=
+def gen_yara(filename, tight=True, max_lines=3000, min_patterns=0):
     global seen_patterns
     global percent_tight_match
 
     # Print out those that aren't in the whitelist
-    byte_patterns = getBytePatterns(filename)
+    byte_patterns = get_byte_patterns(filename)
 
     if tight:
         # Dont print the same rule twice
@@ -190,22 +191,22 @@ def generateYara(filename, singleFile, tight=True, max_lines=3000, min_patterns=
                 print('\r\n\r\n')
 
 
-def fuzzyHash(filename, tight=True):
+def fuzzy_hash(filename, tight=True):
     if os.path.isdir(filename):
         for f in os.listdir(filename):
-            generateFuzzyHash('./' + filename + '/' + f)
+            gen_fuzzy_hash('./' + filename + '/' + f)
     else:
         if os.path.isfile(filename):
-            generateFuzzyHash(filename)
+            gen_fuzzy_hash(filename)
 
 
 def yara(filename, tight=True):
     if os.path.isdir(filename):
         for f in os.listdir(filename):
-            generateYara('./' + filename + '/' + f, False, tight)
+            gen_yara('./' + filename + '/' + f, False, tight)
     else:
         if os.path.isfile(filename):
-            generateYara(filename, True, tight)
+            gen_yara(filename, True, tight)
 
 
 # Returns true if a pattern is whitelisted
@@ -214,12 +215,12 @@ def yara(filename, tight=True):
 def whitelisted(pattern):
     db.execute('SELECT * FROM whitelist WHERE pattern ="' + pattern + '"')
     result = db.fetchone()
-    if result == None:
+    if not result:
         return False
     return True
 
 
-def addToWhitelist(folder):
+def add_to_whitelist(folder):
     # Minimum number of samples a pattern must be in
     min_seen = 1
     count = 0
@@ -230,7 +231,7 @@ def addToWhitelist(folder):
             count = count + 1
             print('Processed ' + str(count) + ' file(s)')
             print('Processing ' + f)
-            new_seen = getBytePatterns('./' + folder + '/' + f, True)
+            new_seen = get_byte_patterns('./' + folder + '/' + f, True)
             for pattern in new_seen:
                 db.execute(
                     'insert or ignore into whitelist (pattern) values ("' + pattern + '")')
@@ -243,7 +244,7 @@ def addToWhitelist(folder):
         for f in os.listdir(folder):
             count = count + 1
             print('Processed ' + str(count) + ' file(s)')
-            new_seen = getBytePatterns('./' + folder + '/' + f, True)
+            new_seen = get_byte_patterns('./' + folder + '/' + f, True)
             for pattern in new_seen:
                 if pattern not in seen:
                     seen[pattern] = 1
@@ -261,16 +262,16 @@ def addToWhitelist(folder):
     conn.commit()
 
 
-def generateSample(filename):
+def gen_sample(filename):
     md5 = hashlib.md5(open(filename, 'rb').read()).hexdigest()
     # Print out those that aren't in the whitelist
-    byte_patterns = getBytePatterns(filename)
+    byte_patterns = get_byte_patterns(filename)
     for pattern in byte_patterns:
         db.execute('insert or ignore into malware (pattern, md5) values ("' +
                    pattern + '", "' + md5 + '")')
 
 
-def deleteDatabase():
+def delete_database():
     db.execute('DROP TABLE IF EXISTS whitelist')
     db.execute('DROP TABLE IF EXISTS malware')
     db.execute('CREATE TABLE whitelist (pattern text)')
@@ -280,28 +281,28 @@ def deleteDatabase():
 
 
 # Add a file or folder to malware db
-def addMalware(filename):
+def add_malware(filename):
     print('Adding samples to malware database')
     if os.path.isdir(filename):
         for f in os.listdir(filename):
-            generateSample('./' + filename + '/' + f)
+            gen_sample('./' + filename + '/' + f)
     else:
         if os.path.isfile(filename):
-            generateSample(filename)
+            gen_sample(filename)
     conn.commit()
     print('Added samples')
 
 
 # For every pattern in file, find related
-def malwareSearch(filename):
+def malware_search(filename):
     md5 = hashlib.md5(open(filename, 'rb').read()).hexdigest()
     pattern_lookups = {}
     found_samples = set()
 
     # Print out those that aren't in the whitelist
-    byte_patterns = getBytePatterns(filename)
+    byte_patterns = get_byte_patterns(filename)
     for pattern in byte_patterns:
-        related_samples = findRelated(pattern)
+        related_samples = find_related(pattern)
 
         for sample in related_samples:
             if sample not in found_samples and sample != md5:
@@ -316,7 +317,7 @@ def malwareSearch(filename):
         print('No related samples found')
 
 
-def findRelated(pattern):
+def find_related(pattern):
     db.execute('SELECT md5 FROM malware WHERE pattern ="' + pattern + '"')
     rows = db.fetchall()
     toReturn = []
@@ -327,6 +328,6 @@ def findRelated(pattern):
 
 
 # This regex decides what patterns we will extract
-prolog_regex = loadProlog()
+prolog_regex = load_prolog()
 
-parseArguments()
+parse_args()
