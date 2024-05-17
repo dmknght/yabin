@@ -28,15 +28,17 @@ db.execute('PRAGMA synchronous=OFF')
 
 
 def parseArguments():
-
     parser = argparse.ArgumentParser(
         description='Yabin - Signatures and searches malware')
     parser.add_argument('-y', '--yara', help='Generate yara rule for the file or folder', required=False)
-    parser.add_argument('-yh', '--yaraHunt', help='Generate wide yara rule (any of, not all of).\r\n Useful for hunting for related samples or potentially malicious files that share any of the code - but liable to false positive', required=False)
-    parser.add_argument('-d', '--deleteDatabase',help='Empty the whitelist and malware database',  action='store_true')
-    parser.add_argument('-w', '--addToWhitelist',help='Add a file or folder to the whitelist',  required=False)
+    parser.add_argument('-yh', '--yaraHunt',
+                        help='Generate wide yara rule (any of, not all of).\r\n Useful for hunting for related samples or potentially malicious files that share any of the code - but liable to false positive',
+                        required=False)
+    parser.add_argument('-d', '--deleteDatabase', help='Empty the whitelist and malware database', action='store_true')
+    parser.add_argument('-w', '--addToWhitelist', help='Add a file or folder to the whitelist', required=False)
     parser.add_argument('-f', '--fuzzyHash', help='Generate a fuzzy hash for the file', required=False)
-    parser.add_argument('-m', '--malwareAdd', help='Add malware file or folder to malware database to be searched', required=False)
+    parser.add_argument('-m', '--malwareAdd', help='Add malware file or folder to malware database to be searched',
+                        required=False)
     parser.add_argument('-s', '--malwareSearch', help='Search for samples related to this file', required=False)
 
     args = vars(parser.parse_args())
@@ -87,6 +89,7 @@ def loadProlog():
     prolog_regex += ')'
     prolog_regex = prolog_regex.replace('|)', ')')
     return prolog_regex
+
 
 # Get the shannon entropy of a string
 
@@ -204,6 +207,7 @@ def yara(filename, tight=True):
         if os.path.isfile(filename):
             generateYara(filename, True, tight)
 
+
 # Returns true if a pattern is whitelisted
 
 
@@ -290,7 +294,7 @@ def addMalware(filename):
 
 # For every pattern in file, find related
 def malwareSearch(filename):
-    md5 = hashlib.md5(open(filename,'rb').read()).hexdigest()
+    md5 = hashlib.md5(open(filename, 'rb').read()).hexdigest()
     pattern_lookups = {}
     found_samples = set()
 
@@ -300,7 +304,7 @@ def malwareSearch(filename):
         related_samples = findRelated(pattern)
 
         for sample in related_samples:
-            if sample not in found_samples and sample !=  md5:
+            if sample not in found_samples and sample != md5:
                 found_samples.add(sample)
                 pattern_lookups[sample] = pattern
 
@@ -311,6 +315,7 @@ def malwareSearch(filename):
     else:
         print('No related samples found')
 
+
 def findRelated(pattern):
     db.execute('SELECT md5 FROM malware WHERE pattern ="' + pattern + '"')
     rows = db.fetchall()
@@ -319,6 +324,7 @@ def findRelated(pattern):
         toReturn.append(row[0])
 
     return toReturn
+
 
 # This regex decides what patterns we will extract
 prolog_regex = loadProlog()
