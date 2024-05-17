@@ -64,8 +64,9 @@ def get_byte_patterns(filename, ignore_whitelist=False):
         content = f.read()
     hex_value = binascii.hexlify(content).decode('utf-8')
     # Add - every two characters so we match -xx- not x-x
-    hex_value = 'x'.join([hex_value[i:i + 2] for i in range(0, len(hex_value), 2)])
+    hex_value = 'x' + 'x'.join([hex_value[i:i + 2] for i in range(0, len(hex_value), 2)])
     seen = {}
+    # Match some prebuild regex to add byte seqs. This method might not work for shellcode samples
     for match in re.findall(prolog_regex, hex_value):
         bit = match[0].replace('x', '')
         if bit not in seen:
@@ -267,8 +268,7 @@ def gen_sample(filename):
     # Print out those that aren't in the whitelist
     byte_patterns = get_byte_patterns(filename)
     for pattern in byte_patterns:
-        db.execute('insert or ignore into malware (pattern, md5) values ("' +
-                   pattern + '", "' + md5 + '")')
+        db.execute('insert or ignore into malware (pattern, md5) values ("' + pattern + '", "' + md5 + '")')
 
 
 def delete_database():
@@ -283,14 +283,20 @@ def delete_database():
 # Add a file or folder to malware db
 def add_malware(filename):
     print('Adding samples to malware database')
-    if os.path.isdir(filename):
-        for f in os.listdir(filename):
-            gen_sample(filename + '/' + f)
-    else:
-        if os.path.isfile(filename):
-            gen_sample(filename)
-    conn.commit()
-    print('Added samples')
+    try:
+        if os.path.isdir(filename):
+            for f in os.listdir(filename):
+                gen_sample(filename + '/' + f)
+                print("Added " + filename + '/' + f + " to database")
+        else:
+            if os.path.isfile(filename):
+                gen_sample(filename)
+                print("Added " + filename + " to database")
+    except Exception:
+        return
+    finally:
+        conn.commit()  # Check if sample is actually added?
+        print('Samples added')
 
 
 # For every pattern in file, find related
