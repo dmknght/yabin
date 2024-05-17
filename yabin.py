@@ -231,7 +231,7 @@ def add_to_whitelist(folder):
             count = count + 1
             print('Processed ' + str(count) + ' file(s)')
             print('Processing ' + f)
-            new_seen = get_byte_patterns('./' + folder + '/' + f, True)
+            new_seen = get_byte_patterns(folder + '/' + f, True)
             for pattern in new_seen:
                 db.execute(
                     'insert or ignore into whitelist (pattern) values ("' + pattern + '")')
@@ -244,7 +244,7 @@ def add_to_whitelist(folder):
         for f in os.listdir(folder):
             count = count + 1
             print('Processed ' + str(count) + ' file(s)')
-            new_seen = get_byte_patterns('./' + folder + '/' + f, True)
+            new_seen = get_byte_patterns(folder + '/' + f, True)
             for pattern in new_seen:
                 if pattern not in seen:
                     seen[pattern] = 1
