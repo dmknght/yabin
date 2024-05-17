@@ -62,7 +62,7 @@ def parse_args():
 def get_byte_patterns(filename, ignore_whitelist=False):
     with open(filename, 'rb') as f:
         content = f.read()
-    hex_value = binascii.hexlify(content)
+    hex_value = binascii.hexlify(content).decode('utf-8')
     # Add - every two characters so we match -xx- not x-x
     hex_value = 'x'.join([hex_value[i:i + 2] for i in range(0, len(hex_value), 2)])
     seen = {}
